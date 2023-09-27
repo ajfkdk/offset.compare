@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        #data-container-left div, #data-container-right div {
+            height: 40px;
+            margin: 10px 0;
+            position: relative;
+            /*border-radius: 10px;*/
+        }
+
+        .green-bar {
+            background-color: #1abe1a;
+        }
+
+        .red-bar {
+            background-color: #e81c1c;
+        }
+
+        #data-container-left span, #data-container-right span {
+            color: white;
+            position: absolute;
+            display: flex;
+            align-items: center;
+        }
+
+        #data-container-left .offset, #data-container-right .value {
+            left: 0;
+        }
+
+        #data-container-left .value,#data-container-right .offset  {
+            right: 0;
+        }
+
+        .green-bar {
+            display: flex;
+            align-items: center;
+            border-radius: 3px;
+        }
+
+        #data-container-right .green-bar {
+            display: flex;
+            align-items: center;
+        }
+
+        #data-container-left {
+            float: left;
+            width: 49%;
+        }
+
+        #data-container-right {
+            float: right;
+            width: 49%;
+        }
+
+        #data-header {
+            /*居中*/
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+        }
+    </style>
+</head>
+<body>
+<div id="data-header">
+    <input type="file" id="file-input1"/>
+    <input type="file" id="file-input2"/>
+    <button id="compare">Compare</button>
+    <button id="reverse">Reverse Sort</button>
+</div>
+<div id="data-container-left"></div>
+<div id="data-container-right"></div>
+
+<script>
+    var file1Data, file2Data;
+
+    function handleFileSelect(evt) {
+        var file = evt.target.files[0];
+        var readerId = evt.target.id;
+
+        var reader = new FileReader();
+        reader.onload = function (event) {
+            var contents = event.target.result;
+            var lines = contents.split('|');
+
+            var data = lines.map(line => {
+                var parts = line.split(',');
+                return {
+                    x: Number(parts[0]),
+                    y: Number(parts[1])
+                };
+            });
+
+            if (readerId === 'file-input1') {
+                file1Data = data;
+                renderData('data-container-left', data);
+            } else {
+                file2Data = data;
+                renderData('data-container-right', data);
+            }
+        };
+
+        reader.readAsText(file);
+    }
+
+    document.getElementById('file-input1').addEventListener('change', handleFileSelect, false);
+    document.getElementById('file-input2').addEventListener('change', handleFileSelect, false);
+
+    document.getElementById('compare').addEventListener('click', function () {
+        if (file1Data && file2Data) {
+            renderComparison();
+        }
+    }, false);
+    document.getElementById('reverse').addEventListener('click', function () {
+        if (file1Data && file2Data) {
+            reverseData();
+        }
+    }, false);
+
+    function reverseData() {
+        file1Data.reverse();
+        file2Data.reverse();
+
+        renderComparison();
+    }
+    function renderData(containerId, data) {
+        var container = document.getElementById(containerId);
+        container.innerHTML = ''; // Clear previous data
+
+        data.forEach((item) => {
+            var bar = document.createElement('div');
+            bar.style.width = "100%"
+
+            var yLabel = document.createElement('span');
+            yLabel.textContent = item.y;
+            yLabel.className = 'offset';
+
+            var xLabel = document.createElement('span');
+            xLabel.textContent =  item.x;
+            xLabel.className = 'value';
+
+            bar.appendChild(xLabel);
+            bar.appendChild(yLabel);
+
+            bar.className = 'green-bar';
+            container.appendChild(bar);
+        });
+    }
+
+    function renderComparison() {
+        var containerLeft = document.getElementById('data-container-left');
+        var containerRight = document.getElementById('data-container-right');
+
+        containerLeft.innerHTML = '';
+        containerRight.innerHTML = '';
+
+        file1Data.forEach((item1, index) => {
+            var item2 = file2Data[index];
+            renderBarItem('data-container-left', item1, item1.x === item2.x);
+            renderBarItem('data-container-right', item2, item1.x === item2.x);
+        });
+    }
+
+    function renderBarItem(containerId, item, isSame) {
+        var container = document.getElementById(containerId);
+
+        var bar = document.createElement('div');
+        bar.style.width = "100%"
+
+        var yLabel = document.createElement('span');
+        yLabel.textContent = item.y;
+        yLabel.className = 'offset';
+
+
+        var xLabel = document.createElement('span');
+        xLabel.textContent = item.x;
+        xLabel.className = 'value';
+
+        bar.appendChild(xLabel);
+        bar.appendChild(yLabel);
+
+        bar.className = isSame ? 'green-bar' : 'red-bar';
+        container.appendChild(bar);
+    }
+</script>
+</body>
+</html>
